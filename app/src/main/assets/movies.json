@@ -1,0 +1,258 @@
+[
+  {
+    "title": "The Wizard of Oz",
+    "badDescription": "Transported to a surreal landscape, a young girl kills the first person she meets and then teams up with three strangers to kill again.",
+    "characterHint": "Toto",
+    "plotHint": "Munchkins singing",
+    "sceneHint": "Flying monkeys"
+  },
+  {
+    "title": "Batman",
+    "badDescription": "Billionaire devotes his fortune to cosplay and beating up the mentally ill.",
+    "characterHint": "Alfred",
+    "plotHint": "Parents in an alley",
+    "sceneHint": "Grappling hook off a building"
+  },
+  {
+    "title": "The Shining",
+    "badDescription": "A family takes a seasonal caretaking job at a remote, empty hotel. Dad's writer's block turns homicidal.",
+    "characterHint": "Danny",
+    "plotHint": "Writer's block",
+    "sceneHint": "Elevator of blood"
+  },
+  {
+    "title": "Star Wars",
+    "badDescription": "Farm boy, old man, and a smuggler go on a road trip to rescue a princess and deliver some stolen blueprints for a giant space laser.",
+    "characterHint": "Chewbacca",
+    "plotHint": "Death Star",
+    "sceneHint": "Cantina band"
+  },
+  {
+    "title": "Titanic",
+    "badDescription": "Everyone tries the Ice Bucket Challenge. A lot of them fail.",
+    "characterHint": "Rose",
+    "plotHint": "Drawing like a French girl",
+    "sceneHint": "I'm the king of the world!"
+  },
+  {
+    "title": "The Matrix",
+    "badDescription": "Local hacker discovers we live in a simulation, wears lots of leather.",
+    "characterHint": "Morpheus",
+    "plotHint": "Red pill or blue pill",
+    "sceneHint": "Dodging bullets"
+  },
+  {
+    "title": "Jurassic Park",
+    "badDescription": "Old man creates a petting zoo that goes horribly wrong.",
+    "characterHint": "Ian Malcolm",
+    "plotHint": "Mosquito in amber",
+    "sceneHint": "Water rippling in a cup"
+  },
+  {
+    "title": "Home Alone",
+    "badDescription": "Parents forget their kid, who then subjects two burglars to extreme psychological and physical torture.",
+    "characterHint": "Kevin",
+    "plotHint": "Fake party",
+    "sceneHint": "Paint cans on the stairs"
+  },
+  {
+    "title": "Finding Nemo",
+    "badDescription": "A father's journey to find his son, with the help of a mentally challenged woman.",
+    "characterHint": "Dory",
+    "plotHint": "Dentist office",
+    "sceneHint": "Sharks at an intervention"
+  },
+  {
+    "title": "Beauty and the Beast",
+    "badDescription": "Stockholm Syndrome: The Musical.",
+    "characterHint": "Gaston",
+    "plotHint": "Cursed castle",
+    "sceneHint": "Dancing teacups"
+  },
+  {
+    "title": "Inception",
+    "badDescription": "A series of naps that get progressively more confusing.",
+    "characterHint": "Cobb",
+    "plotHint": "Planting an idea",
+    "sceneHint": "Spinning top"
+  },
+  {
+    "title": "Forrest Gump",
+    "badDescription": "A man with a low IQ inadvertently influences several major historical events while running.",
+    "characterHint": "Jenny",
+    "plotHint": "Box of chocolates",
+    "sceneHint": "Ping pong in China"
+  },
+  {
+    "title": "Shrek",
+    "badDescription": "A green recluse is forced to go on a rescue mission with a talking donkey to get squatters off his swamp.",
+    "characterHint": "Donkey",
+    "plotHint": "Onion layers",
+    "sceneHint": "Lord Farquaad's tournament",
+    "imageRes": "img_shrek"
+  },
+  {
+    "title": "The Lord of the Rings",
+    "badDescription": "Group spends nine hours returning a piece of jewelry.",
+    "characterHint": "Frodo",
+    "plotHint": "One Ring",
+    "sceneHint": "Mount Doom",
+    "imageRes": "img_lord_of_the_rings"
+  },
+  {
+    "title": "Spider-Man",
+    "badDescription": "Teenager gets bitten by a radioactive spider, starts shooting sticky liquid from his wrists and climbing walls.",
+    "characterHint": "Peter Parker",
+    "plotHint": "With great power comes great responsibility",
+    "sceneHint": "Green Goblin bridge rescue"
+  },
+  {
+    "title": "Interstellar",
+    "badDescription": "A father goes on a space trip to save humanity, ends up behind his daughter's bookshelf.",
+    "characterHint": "Cooper",
+    "plotHint": "TARS robot",
+    "sceneHint": "Dust storms and cornfields"
+  },
+  {
+    "title": "Fight Club",
+    "badDescription": "Insomniac office worker starts an underground boxing club with his imaginary friend.",
+    "characterHint": "Tyler Durden",
+    "plotHint": "The first rule is you do not talk about it",
+    "sceneHint": "Soap making chemistry"
+  },
+  {
+    "title": "The Lion King",
+    "badDescription": "After his father's tragic death, a young prince runs away to eat bugs with a meerkat and a warthog.",
+    "characterHint": "Simba",
+    "plotHint": "Hakuna Matata",
+    "sceneHint": "Pride Rock"
+  },
+  {
+    "title": "Die Hard",
+    "badDescription": "Barefoot cop spends his Christmas Eve crawling in ventilation ducts to ruin a heist.",
+    "characterHint": "John McClane",
+    "plotHint": "Yippee-ki-yay",
+    "sceneHint": "Nakatomi Plaza tower"
+  },
+  {
+    "title": "Back to the Future",
+    "badDescription": "Teenager travels back in time and has to fend off his own mother's romantic advances.",
+    "characterHint": "Marty McFly",
+    "plotHint": "1.21 gigawatts",
+    "sceneHint": "DeLorean lightning strike"
+  },
+  {
+    "title": "Pulp Fiction",
+    "badDescription": "Two hitmen have a very long conversation about foot massages and cheeseburgers, then things get messy.",
+    "characterHint": "Jules Winnfield",
+    "plotHint": "Non-linear timeline",
+    "sceneHint": "Dance contest at a 50s diner",
+    "imageRes": "img_pulp_fiction"
+  },
+  {
+    "title": "Jaws",
+    "badDescription": "A small beach town's mayor refuses to close the beach despite a very good reason to.",
+    "characterHint": "Chief Brody",
+    "plotHint": "You're gonna need a bigger boat",
+    "sceneHint": "Fin cutting through the water",
+    "imageRes": "img_jaws"
+  },
+  {
+    "title": "The Godfather",
+    "badDescription": "A crime family patriarch hands the reins to his reluctant son, who turns out to be a natural.",
+    "characterHint": "Michael Corleone",
+    "plotHint": "An offer he can't refuse",
+    "sceneHint": "Horse head in the bed"
+  },
+  {
+    "title": "Toy Story",
+    "badDescription": "A cowboy doll has a jealousy-fueled meltdown over the new space ranger toy.",
+    "characterHint": "Buzz Lightyear",
+    "plotHint": "Toys come alive when nobody's looking",
+    "sceneHint": "Sid's mutant toy room"
+  },
+  {
+    "title": "E.T. the Extra-Terrestrial",
+    "badDescription": "A stranded alien befriends a lonely kid and really just wants to phone home.",
+    "characterHint": "Elliott",
+    "plotHint": "Government agents in hazmat suits",
+    "sceneHint": "Bicycle flying in front of the moon"
+  },
+  {
+    "title": "Frozen",
+    "badDescription": "A queen with ice powers accidentally starts an eternal winter after a meltdown at her own coronation.",
+    "characterHint": "Elsa",
+    "plotHint": "An act of true love breaks the curse",
+    "sceneHint": "Building an ice palace alone"
+  },
+  {
+    "title": "The Dark Knight",
+    "badDescription": "A vigilante in a rubber suit faces off against a chaos-loving clown with no plan and no fingerprints.",
+    "characterHint": "The Joker",
+    "plotHint": "Two ferries, one impossible choice",
+    "sceneHint": "Truck flips end over end"
+  },
+  {
+    "title": "Avatar",
+    "badDescription": "A paraplegic marine controls an alien body to infiltrate the natives, then switches sides.",
+    "characterHint": "Jake Sully",
+    "plotHint": "Unobtanium mining dispute",
+    "sceneHint": "Riding a giant banshee"
+  },
+  {
+    "title": "Ghostbusters",
+    "badDescription": "Unemployed scientists start a pest control business, except the pests are ghosts.",
+    "characterHint": "Peter Venkman",
+    "plotHint": "Don't cross the streams",
+    "sceneHint": "Giant marshmallow man rampage"
+  },
+  {
+    "title": "The Sixth Sense",
+    "badDescription": "A child psychologist helps a boy who sees dead people, with one huge catch.",
+    "characterHint": "Cole Sear",
+    "plotHint": "I see dead people",
+    "sceneHint": "Red doorknob"
+  },
+  {
+    "title": "Alien",
+    "badDescription": "A commercial spaceship crew picks up a very bad hitchhiker.",
+    "characterHint": "Ripley",
+    "plotHint": "In space no one can hear you scream",
+    "sceneHint": "Chestburster at dinner"
+  },
+  {
+    "title": "Rocky",
+    "badDescription": "A nobody boxer gets one shot at the title and just tries to go the distance.",
+    "characterHint": "Apollo Creed",
+    "plotHint": "Running up the museum steps",
+    "sceneHint": "Adrian!"
+  },
+  {
+    "title": "The Terminator",
+    "badDescription": "A killer robot from the future is sent back in time to stop a woman from having her son.",
+    "characterHint": "Sarah Connor",
+    "plotHint": "Skynet becomes self-aware",
+    "sceneHint": "I'll be back"
+  },
+  {
+    "title": "Grease",
+    "badDescription": "A goody-two-shoes and a greaser fall for each other over summer, then pretend not to know each other at school.",
+    "characterHint": "Danny Zuko",
+    "plotHint": "Summer romance turns awkward",
+    "sceneHint": "Souped-up car race"
+  },
+  {
+    "title": "Mean Girls",
+    "badDescription": "A home-schooled teen infiltrates the most popular clique at school to bring them down from within.",
+    "characterHint": "Regina George",
+    "plotHint": "The Burn Book",
+    "sceneHint": "On Wednesdays we wear pink"
+  },
+  {
+    "title": "King Kong",
+    "badDescription": "A giant ape is captured from his island home and put on display, and it goes about as well as you'd expect.",
+    "characterHint": "Ann Darrow",
+    "plotHint": "Beauty and the beast, sort of",
+    "sceneHint": "Climbing the Empire State Building"
+  }
+]

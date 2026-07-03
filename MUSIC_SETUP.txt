@@ -1,0 +1,25 @@
+HOW TO ADD BACKGROUND MUSIC
+===========================
+
+The app is already wired for looping background music with a mute toggle.
+It builds and runs fine WITHOUT a music file (it just plays silence until
+you add one). To add the music:
+
+1. Download a looping ambient track (CC0 / royalty-free) from:
+   - https://pixabay.com/music/   (search "ethereal ambient")
+   - https://freesound.org/       (filter License = CC0, search "ambient ethereal drone")
+
+2. Rename it to exactly:  bg_music.mp3   (or bg_music.ogg)
+
+3. Create the folder if it doesn't exist and put the file here:
+       app/src/main/res/raw/bg_music.mp3
+
+   IMPORTANT - Android resource-folder filename rules:
+   Files inside res/raw/ MUST be named with only lowercase letters, digits,
+   and underscores. "bg_music.mp3" is valid. "BG-Music.mp3", "bg music.mp3",
+   or a README with capital letters will FAIL the build. (Do not put any
+   other files in res/raw/ unless they follow this rule.)
+
+4. Rebuild. The music turns on automatically once bg_music.<ext> is present.
+
+The mute button (music-note icon in the top bar and menu) works regardless.

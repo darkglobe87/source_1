@@ -1,0 +1,32 @@
+HOW TO ADD MOVIE ARTWORK
+=========================
+
+Four movies are now wired to show artwork above their description, if the
+image file is present. The app builds and runs fine WITHOUT these files -
+missing art just means that movie shows text only, same as before.
+
+Movies expecting art, and the EXACT filename each one needs:
+
+    Shrek                    -> img_shrek.png
+    The Lord of the Rings    -> img_lord_of_the_rings.png
+    Pulp Fiction              -> img_pulp_fiction.png
+    Jaws                      -> img_jaws.png
+
+(.jpg or .webp also work - just keep the base name identical.)
+
+WHERE TO PUT THEM:
+    app/src/main/res/drawable/
+
+RULES - same as the audio file, and this is the rule that broke the last
+build, so it matters:
+    Filenames in any res/ subfolder must be lowercase letters, digits, and
+    underscores ONLY. No capitals, spaces, or hyphens. "img_shrek.png" is
+    correct. "Img-Shrek.png" or "img shrek.png" will FAIL THE BUILD.
+
+Do not put any other files (readmes, notes, etc.) inside res/drawable/ or
+res/raw/ - anything in those folders gets validated as a resource name.
+Keep notes like this one at the project root instead, like this file is.
+
+The code looks up each image by name at runtime (not a compile-time
+reference), so you can add these one at a time, in any order, and rebuild
+whenever - nothing needs to change in the code itself.

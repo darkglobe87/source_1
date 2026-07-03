@@ -1,0 +1,6 @@
+{
+  "name": "Bad Plots",
+  "description": "A hangman style movie guessing game with bad movie descriptions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
