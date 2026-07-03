@@ -48,6 +48,8 @@ import com.example.ui.theme.DarkSurfaceVariant
 import com.example.ui.theme.RadioactiveGreen
 import com.example.ui.theme.RadioactiveGreenDim
 import com.example.ui.theme.RadioactiveYellowGreen
+import com.example.ui.theme.CorrectGreen
+import com.example.ui.theme.ErrorRed
 
 import com.example.ui.theme.NeonPurple
 import com.example.viewmodel.GameStatus
@@ -209,6 +211,30 @@ fun GameScreen(
         levelTransition.animateTo(1f, animationSpec = tween(550, easing = FastOutSlowInEasing))
     }
 
+    // Background reacts to how close the player is to losing - calm until lives
+    // run low, then ramps quickly rather than linearly, so it stays subtle early on.
+    val dangerTarget = ((8 - uiState.lives).coerceIn(0, 8) / 8f).let { it * it }
+    val dangerLevel by animateFloatAsState(targetValue = dangerTarget, animationSpec = tween(500), label = "danger")
+
+    // A brief background flash on win/loss - snaps to full and decays back to 0.
+    val pulseAnim = androidx.compose.runtime.remember { Animatable(0f) }
+    var pulseColor by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(NeonCyan) }
+    androidx.compose.runtime.LaunchedEffect(uiState.status) {
+        when (uiState.status) {
+            GameStatus.Won -> {
+                pulseColor = CorrectGreen
+                pulseAnim.snapTo(1f)
+                pulseAnim.animateTo(0f, animationSpec = tween(900, easing = FastOutSlowInEasing))
+            }
+            GameStatus.Lost -> {
+                pulseColor = ErrorRed
+                pulseAnim.snapTo(1f)
+                pulseAnim.animateTo(0f, animationSpec = tween(900, easing = FastOutSlowInEasing))
+            }
+            else -> {}
+        }
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
@@ -255,7 +281,7 @@ fun GameScreen(
         }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize()) {
-            ParticleBackground()
+            LivingBackground(dangerLevel = dangerLevel, pulse = pulseAnim.value, pulseColor = pulseColor)
             Column(
                 modifier = Modifier
                     .fillMaxSize()

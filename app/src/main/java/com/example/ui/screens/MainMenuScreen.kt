@@ -82,7 +82,7 @@ fun MainMenuScreen(
     val density = androidx.compose.ui.platform.LocalDensity.current.density
 
     Box(modifier = Modifier.fillMaxSize()) {
-        ParticleBackground()
+        LivingBackground()
 
         IconButton(
             onClick = { MusicManager.toggleMute() },

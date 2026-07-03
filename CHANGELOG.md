@@ -1,5 +1,13 @@
 # Bad Plots — Update Changelog
 
+## New: Living Cinema background (AGSL shader)
+`ParticleBackground` (simple animated dust) is replaced by `LivingBackground` (`CinematicBackground.kt`, new), a full-screen animated backdrop with real depth: drifting volumetric fog (layered FBM noise), sweeping projector-style light rays, film grain, scanlines, and a vignette.
+- Runs as a GPU `RuntimeShader` (AGSL) on API 33+ (`ShaderCinematicBackground`).
+- Falls back to the original particle dust plus a lightweight vignette/pulse overlay on API 24-32, where AGSL isn't available (`LegacyReactiveBackground`).
+- Reactive to game state on `GameScreen`: the palette shifts toward red as lives run low (`dangerLevel`, ramps quadratically so it stays subtle until things get close), and a brief color flash plays on win (green) or loss (red) (`pulse`/`pulseColor`).
+- `MainMenuScreen` uses the same background at its calm defaults (no danger/pulse).
+- `ParticleBackground` itself is unchanged and still used internally by the legacy fallback path.
+
 ## New: Animated Main Menu
 - `MainMenuScreen.kt` is now the app's start destination (was: straight into the game).
 - Animated logo entrance (scale + fade), a slow pulsing ambient glow behind the title, staggered button entrance.
@@ -26,6 +34,7 @@
 - Removed an unused icon import left over from earlier development.
 
 ## Files touched
+- `app/src/main/java/com/example/ui/screens/CinematicBackground.kt` — new
 - `app/src/main/java/com/example/ui/screens/GameScreen.kt`
 - `app/src/main/java/com/example/ui/screens/MainMenuScreen.kt` — new
 - `app/src/main/java/com/example/MainActivity.kt`
@@ -37,4 +46,5 @@
 `app/src/test/.../GreetingScreenshotTest.kt` and `ExampleRobolectricTest.kt` reference leftover Android-Studio-template code (a `Greeting` composable that doesn't exist anywhere in the app, and an expected app name of "My Application" instead of "Bad Plots"). These aren't wired to any real screen and were already broken before this round — flagging in case you want them cleaned up or deleted separately.
 
 ## Not verified
-No network/Gradle access in this environment, so changes are careful manual edits, not compiler-verified. Worth a build/run pass before shipping.
+No network/Gradle/Android-SDK access in this environment, so changes are careful manual edits, not compiler-verified. Worth a build/run pass before shipping.
+- The AGSL shader in `CinematicBackground.kt` is hand-written and has not been compiled by the GPU shader compiler - that only happens on a real API 33+ device/emulator. If it fails to compile at runtime, `RuntimeShader` throws, so test on both an API 33+ target and an API 24-32 target (or emulator) to exercise both code paths before release.
