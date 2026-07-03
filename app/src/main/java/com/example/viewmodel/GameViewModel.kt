@@ -28,7 +28,9 @@ data class GameUiState(
     val revealedCharacterHint: Boolean = false,
     val revealedSceneHint: Boolean = false,
     val error: String? = null,
-    val snackbarMessage: String? = null
+    val snackbarMessage: String? = null,
+    // One-shot signal for the UI to play a correct/wrong sfx+haptic, then consume it.
+    val lastGuessCorrect: Boolean? = null
 )
 
 class GameViewModel(
@@ -103,19 +105,29 @@ class GameViewModel(
             else -> GameStatus.Playing
         }
 
-        _uiState.update { 
+        _uiState.update {
             it.copy(
                 guessedLetters = newGuessed,
                 lives = newLives,
-                status = newStatus
+                status = newStatus,
+                lastGuessCorrect = isCorrect
             )
         }
 
         if (newStatus == GameStatus.Won) {
             viewModelScope.launch {
                 repository.addCoins(20) // Reward for winning
+                repository.recordWin()
+            }
+        } else if (newStatus == GameStatus.Lost) {
+            viewModelScope.launch {
+                repository.recordLoss()
             }
         }
+    }
+
+    fun consumeLastGuessResult() {
+        _uiState.update { it.copy(lastGuessCorrect = null) }
     }
 
     fun useLetterHint() {

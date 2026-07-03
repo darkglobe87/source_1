@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.MusicOff
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -23,6 +24,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import kotlinx.coroutines.isActive
 import com.example.audio.MusicManager
+import com.example.audio.SfxManager
+import com.example.audio.HapticsManager
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -204,6 +207,22 @@ fun GameScreen(
         }
     }
 
+    // Per-guess sfx/haptic feedback - a one-shot signal from the ViewModel, consumed right after firing.
+    androidx.compose.runtime.LaunchedEffect(uiState.lastGuessCorrect) {
+        when (uiState.lastGuessCorrect) {
+            true -> {
+                SfxManager.playCorrect()
+                HapticsManager.correct()
+            }
+            false -> {
+                SfxManager.playWrong()
+                HapticsManager.wrong()
+            }
+            null -> {}
+        }
+        if (uiState.lastGuessCorrect != null) viewModel.consumeLastGuessResult()
+    }
+
     val density = LocalDensity.current.density
     val levelTransition = androidx.compose.runtime.remember { Animatable(0f) }
     androidx.compose.runtime.LaunchedEffect(uiState.currentMovie?.id) {
@@ -228,11 +247,15 @@ fun GameScreen(
                 pulseAnim.snapTo(1f)
                 pulseAnim.animateTo(0f, animationSpec = tween(900, easing = FastOutSlowInEasing))
                 confettiTrigger++
+                SfxManager.playWin()
+                HapticsManager.win()
             }
             GameStatus.Lost -> {
                 pulseColor = ErrorRed
                 pulseAnim.snapTo(1f)
                 pulseAnim.animateTo(0f, animationSpec = tween(900, easing = FastOutSlowInEasing))
+                SfxManager.playLose()
+                HapticsManager.lose()
             }
             else -> {}
         }
@@ -462,6 +485,27 @@ fun GameScreen(
                     }
                 }
                 
+                if (won) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    val shareContext = LocalContext.current
+                    OutlinedButton(
+                        onClick = {
+                            val title = uiState.currentMovie?.title ?: "a movie"
+                            val text = "I guessed \"$title\" with ${uiState.lives} lives to spare on Bad Plots! Can you beat me?"
+                            val sendIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(android.content.Intent.EXTRA_TEXT, text)
+                            }
+                            shareContext.startActivity(android.content.Intent.createChooser(sendIntent, "Share your result"))
+                        },
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = NeonCyan),
+                        modifier = Modifier.width(220.dp).height(44.dp)
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Share Result")
+                    }
+                }
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
                     onClick = { viewModel.nextLevel() },
@@ -484,21 +528,21 @@ fun GameScreen(
                         label = "Letter",
                         cost = costLetter,
                         isRevealed = false,
-                        onClick = { viewModel.useLetterHint() }
+                        onClick = { SfxManager.playTap(); HapticsManager.tap(); viewModel.useLetterHint() }
                     )
                     HintButton(
                         icon = Icons.Default.Person,
                         label = "Character",
                         cost = costClue,
                         isRevealed = uiState.revealedCharacterHint,
-                        onClick = { viewModel.revealClue("character") }
+                        onClick = { SfxManager.playTap(); HapticsManager.tap(); viewModel.revealClue("character") }
                     )
                     HintButton(
                         icon = Icons.Default.Movie,
                         label = "Scene",
                         cost = costClue,
                         isRevealed = uiState.revealedSceneHint,
-                        onClick = { viewModel.revealClue("scene") }
+                        onClick = { SfxManager.playTap(); HapticsManager.tap(); viewModel.revealClue("scene") }
                     )
                 }
 

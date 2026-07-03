@@ -1,5 +1,14 @@
 # Bad Plots — Update Changelog
 
+## New: standard mobile-game conventions pass (haptics, sfx, streaks, settings, share, rating)
+- **Haptics** (`HapticsManager`, new): short vibration feedback on correct/wrong guesses, win/loss, and button taps. Toggle persisted via SharedPreferences, same pattern as `MusicManager`. Added the `VIBRATE` permission to the manifest.
+- **Sound effects** (`SfxManager`, new): there were no SFX at all before this, only a music mute toggle. Since there are no audio asset files to load, each effect (correct/wrong/win/lose/tap) is a short procedurally-synthesized PCM tone played via `AudioTrack` - no new asset dependency.
+- **Streak tracking**: `UserState` gains `currentStreak`, `bestStreak`, `totalMoviesGuessed` (Room DB version 2 → 3; the project already uses `fallbackToDestructiveMigration`, so this is a straightforward rebuild, not a manual migration). `AppRepository.recordWin()`/`recordLoss()` update these; shown on the main menu and in Settings.
+- **Share result**: a "Share Result" button on the win banner ("I guessed *Title* with N lives to spare!") via a standard `ACTION_SEND` intent.
+- **Settings screen** (new): toggles for music/SFX/haptics, a stats card (streak/best streak/movies guessed), and a "Rate Bad Plots" button (`market://details`, falling back to the Play Store web URL). Reached via a new gear icon on the main menu.
+- Button taps (hints, PLAY, STORE, Settings) now play the tap sfx/haptic alongside their existing action.
+- **Verification note**: this batch is logic/wiring rather than visual rendering (state flows, standard `Vibrator`/`AudioTrack`/`Intent` APIs, a Room field addition) - a fundamentally lower-risk category to write without being able to run the app than the reverted 3D work above. That said, the *feel* of the generated tones and vibration patterns, and the exact on-device behavior of the Room version bump, still haven't been checked on a real device.
+
 ## New: every movie now shows artwork
 Previously only 4 movies had artwork wired up (`imageRes` in `movies.json`), and none of the 4 image files actually existed anywhere in the project - `IMAGE_SETUP.txt` described where to add them, but they were never added.
 - Added hand-made abstract vector art for the 4 named movies (`img_shrek.xml`, `img_lord_of_the_rings.xml`, `img_pulp_fiction.xml`, `img_jaws.xml`, in `res/drawable/`) - symbolic/geometric motifs (layered rings, a ring + mountains, a glowing briefcase, a fin through waves), not depictions of actual characters or recreations of real poster art, to stay clear of copyright.
@@ -53,6 +62,10 @@ Both the hand-written OpenGL ES letter tiles (`com.example.ui.render3d`, `Letter
 - Removed an unused icon import left over from earlier development.
 
 ## Files touched
+- `app/src/main/java/com/example/audio/HapticsManager.kt`, `SfxManager.kt` — new
+- `app/src/main/java/com/example/ui/screens/SettingsScreen.kt` — new
+- `app/src/main/java/com/example/data/Entities.kt`, `AppDatabase.kt`, `AppRepository.kt` — streak fields + version bump
+- `app/src/main/AndroidManifest.xml` — VIBRATE permission
 - `app/src/main/res/drawable/img_shrek.xml`, `img_lord_of_the_rings.xml`, `img_pulp_fiction.xml`, `img_jaws.xml` — new
 - `app/src/main/java/com/example/ui/screens/ProceduralMoviePoster.kt` — new
 - `IMAGE_SETUP.txt` — updated

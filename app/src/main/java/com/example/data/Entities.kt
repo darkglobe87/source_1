@@ -22,5 +22,8 @@ data class UserState(
     @PrimaryKey val id: Int = 1,
     val coins: Int = 50,
     val currentLevelIndex: Int = 0,
-    val hasPurchasedAdFree: Boolean = false
+    val hasPurchasedAdFree: Boolean = false,
+    val currentStreak: Int = 0,
+    val bestStreak: Int = 0,
+    val totalMoviesGuessed: Int = 0
 )

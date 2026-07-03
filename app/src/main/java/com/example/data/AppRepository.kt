@@ -75,4 +75,27 @@ class AppRepository(
             appDao.updateUserState(state.copy(hasPurchasedAdFree = true))
         }
     }
+
+    /** Call when a level is won: bumps the streak, tracks the best streak, and the lifetime total. */
+    suspend fun recordWin() = userStateMutex.withLock {
+        val state = appDao.getUserState()
+        if (state != null) {
+            val newStreak = state.currentStreak + 1
+            appDao.updateUserState(
+                state.copy(
+                    currentStreak = newStreak,
+                    bestStreak = maxOf(state.bestStreak, newStreak),
+                    totalMoviesGuessed = state.totalMoviesGuessed + 1
+                )
+            )
+        }
+    }
+
+    /** Call when a level is lost: resets the current streak, but leaves the best streak alone. */
+    suspend fun recordLoss() = userStateMutex.withLock {
+        val state = appDao.getUserState()
+        if (state != null) {
+            appDao.updateUserState(state.copy(currentStreak = 0))
+        }
+    }
 }
