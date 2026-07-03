@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.MusicOff
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -23,6 +24,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import kotlinx.coroutines.isActive
 import com.example.audio.MusicManager
+import com.example.audio.SfxManager
+import com.example.audio.HapticsManager
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,6 +51,8 @@ import com.example.ui.theme.DarkSurfaceVariant
 import com.example.ui.theme.RadioactiveGreen
 import com.example.ui.theme.RadioactiveGreenDim
 import com.example.ui.theme.RadioactiveYellowGreen
+import com.example.ui.theme.CorrectGreen
+import com.example.ui.theme.ErrorRed
 
 import com.example.ui.theme.NeonPurple
 import com.example.viewmodel.GameStatus
@@ -202,11 +207,58 @@ fun GameScreen(
         }
     }
 
+    // Per-guess sfx/haptic feedback - a one-shot signal from the ViewModel, consumed right after firing.
+    androidx.compose.runtime.LaunchedEffect(uiState.lastGuessCorrect) {
+        when (uiState.lastGuessCorrect) {
+            true -> {
+                SfxManager.playCorrect()
+                HapticsManager.correct()
+            }
+            false -> {
+                SfxManager.playWrong()
+                HapticsManager.wrong()
+            }
+            null -> {}
+        }
+        if (uiState.lastGuessCorrect != null) viewModel.consumeLastGuessResult()
+    }
+
     val density = LocalDensity.current.density
     val levelTransition = androidx.compose.runtime.remember { Animatable(0f) }
     androidx.compose.runtime.LaunchedEffect(uiState.currentMovie?.id) {
         levelTransition.snapTo(0f)
         levelTransition.animateTo(1f, animationSpec = tween(550, easing = FastOutSlowInEasing))
+    }
+
+    // Background reacts to how close the player is to losing - calm until lives
+    // run low, then ramps quickly rather than linearly, so it stays subtle early on.
+    val dangerTarget = ((8 - uiState.lives).coerceIn(0, 8) / 8f).let { it * it }
+    val dangerLevel by animateFloatAsState(targetValue = dangerTarget, animationSpec = tween(500), label = "danger")
+
+    // A brief background flash on win/loss - snaps to full and decays back to 0.
+    val pulseAnim = androidx.compose.runtime.remember { Animatable(0f) }
+    var pulseColor by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(NeonCyan) }
+    // Bumped once per win to fire a fresh confetti burst (see ConfettiBurst).
+    var confettiTrigger by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    androidx.compose.runtime.LaunchedEffect(uiState.status) {
+        when (uiState.status) {
+            GameStatus.Won -> {
+                pulseColor = CorrectGreen
+                pulseAnim.snapTo(1f)
+                pulseAnim.animateTo(0f, animationSpec = tween(900, easing = FastOutSlowInEasing))
+                confettiTrigger++
+                SfxManager.playWin()
+                HapticsManager.win()
+            }
+            GameStatus.Lost -> {
+                pulseColor = ErrorRed
+                pulseAnim.snapTo(1f)
+                pulseAnim.animateTo(0f, animationSpec = tween(900, easing = FastOutSlowInEasing))
+                SfxManager.playLose()
+                HapticsManager.lose()
+            }
+            else -> {}
+        }
     }
 
     Scaffold(
@@ -255,7 +307,7 @@ fun GameScreen(
         }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize()) {
-            ParticleBackground()
+            LivingBackground(dangerLevel = dangerLevel, pulse = pulseAnim.value, pulseColor = pulseColor)
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -317,25 +369,37 @@ fun GameScreen(
                     elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                 ) {
                     Column(Modifier.padding(16.dp)) {
+                        val movieTitle = uiState.currentMovie?.title ?: ""
                         val imageName = uiState.currentMovie?.imageRes
-                        if (imageName != null) {
-                            val context = LocalContext.current
-                            val resId = androidx.compose.runtime.remember(imageName) {
-                                context.resources.getIdentifier(imageName, "drawable", context.packageName)
-                            }
-                            if (resId != 0) {
-                                Image(
-                                    painter = painterResource(id = resId),
-                                    contentDescription = "Movie art",
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(160.dp)
-                                        .clip(RoundedCornerShape(8.dp)),
-                                    contentScale = ContentScale.Fit
-                                )
-                                Spacer(modifier = Modifier.height(12.dp))
-                            }
+                        val context = LocalContext.current
+                        val resId = androidx.compose.runtime.remember(imageName) {
+                            if (imageName != null) context.resources.getIdentifier(imageName, "drawable", context.packageName) else 0
                         }
+                        if (resId != 0) {
+                            Image(
+                                painter = painterResource(id = resId),
+                                contentDescription = "Movie art",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(160.dp)
+                                    .clip(RoundedCornerShape(8.dp)),
+                                contentScale = ContentScale.Fit
+                            )
+                        } else {
+                            val movie = uiState.currentMovie
+                            val contentText = listOfNotNull(
+                                movie?.badDescription, movie?.characterHint, movie?.plotHint, movie?.sceneHint
+                            ).joinToString(" ")
+                            ProceduralMoviePoster(
+                                title = movieTitle,
+                                contentText = contentText,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(160.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = "\"${uiState.currentMovie?.badDescription}\"",
                             fontSize = 18.sp,
@@ -426,6 +490,27 @@ fun GameScreen(
                     }
                 }
                 
+                if (won) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    val shareContext = LocalContext.current
+                    OutlinedButton(
+                        onClick = {
+                            val title = uiState.currentMovie?.title ?: "a movie"
+                            val text = "I guessed \"$title\" with ${uiState.lives} lives to spare on Bad Plots! Can you beat me?"
+                            val sendIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(android.content.Intent.EXTRA_TEXT, text)
+                            }
+                            shareContext.startActivity(android.content.Intent.createChooser(sendIntent, "Share your result"))
+                        },
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = NeonCyan),
+                        modifier = Modifier.width(220.dp).height(44.dp)
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Share Result")
+                    }
+                }
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
                     onClick = { viewModel.nextLevel() },
@@ -448,21 +533,21 @@ fun GameScreen(
                         label = "Letter",
                         cost = costLetter,
                         isRevealed = false,
-                        onClick = { viewModel.useLetterHint() }
+                        onClick = { SfxManager.playTap(); HapticsManager.tap(); viewModel.useLetterHint() }
                     )
                     HintButton(
                         icon = Icons.Default.Person,
                         label = "Character",
                         cost = costClue,
                         isRevealed = uiState.revealedCharacterHint,
-                        onClick = { viewModel.revealClue("character") }
+                        onClick = { SfxManager.playTap(); HapticsManager.tap(); viewModel.revealClue("character") }
                     )
                     HintButton(
                         icon = Icons.Default.Movie,
                         label = "Scene",
                         cost = costClue,
                         isRevealed = uiState.revealedSceneHint,
-                        onClick = { viewModel.revealClue("scene") }
+                        onClick = { SfxManager.playTap(); HapticsManager.tap(); viewModel.revealClue("scene") }
                     )
                 }
 
@@ -506,6 +591,7 @@ fun GameScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
+        ConfettiBurst(trigger = confettiTrigger, modifier = Modifier.fillMaxSize())
         }
     }
 }

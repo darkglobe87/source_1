@@ -11,11 +11,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.audio.HapticsManager
 import com.example.audio.MusicManager
+import com.example.audio.SfxManager
 import com.example.data.AppDatabase
 import com.example.data.AppRepository
 import com.example.ui.screens.GameScreen
 import com.example.ui.screens.MainMenuScreen
+import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.StoreScreen
 import com.example.ui.theme.DarkBackground
 import com.example.ui.theme.MyApplicationTheme
@@ -28,6 +31,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         MusicManager.init(this)
+        SfxManager.init(this)
+        HapticsManager.init(this)
 
         val database = AppDatabase.getDatabase(this)
         val repository = AppRepository(database.appDao(), this.applicationContext)
@@ -45,7 +50,8 @@ class MainActivity : ComponentActivity() {
                             MainMenuScreen(
                                 repository = repository,
                                 onPlay = { navController.navigate("game") },
-                                onNavigateToStore = { navController.navigate("store") }
+                                onNavigateToStore = { navController.navigate("store") },
+                                onNavigateToSettings = { navController.navigate("settings") }
                             )
                         }
                         composable("game") {
@@ -58,6 +64,12 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("store") {
                             StoreScreen(
+                                repository = repository,
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable("settings") {
+                            SettingsScreen(
                                 repository = repository,
                                 onBack = { navController.popBackStack() }
                             )
@@ -82,6 +94,7 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
         if (isFinishing) {
             MusicManager.release()
+            SfxManager.release()
         }
     }
 }

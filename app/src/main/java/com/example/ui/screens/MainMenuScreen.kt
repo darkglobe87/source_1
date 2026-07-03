@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.MusicOff
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -28,7 +30,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.AppRepository
+import com.example.audio.HapticsManager
 import com.example.audio.MusicManager
+import com.example.audio.SfxManager
 import com.example.ui.theme.NeonCyan
 import com.example.ui.theme.NeonPink
 import com.example.ui.theme.NeonPurple
@@ -37,7 +41,8 @@ import com.example.ui.theme.NeonPurple
 fun MainMenuScreen(
     repository: AppRepository,
     onPlay: () -> Unit,
-    onNavigateToStore: () -> Unit
+    onNavigateToStore: () -> Unit,
+    onNavigateToSettings: () -> Unit
 ) {
     val userState by repository.userState.collectAsState(initial = null)
     val isMuted by MusicManager.isMuted.collectAsState()
@@ -82,20 +87,24 @@ fun MainMenuScreen(
     val density = androidx.compose.ui.platform.LocalDensity.current.density
 
     Box(modifier = Modifier.fillMaxSize()) {
-        ParticleBackground()
+        LivingBackground()
 
-        IconButton(
-            onClick = { MusicManager.toggleMute() },
+        Row(
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .safeDrawingPadding()
                 .padding(20.dp)
         ) {
-            Icon(
-                if (isMuted) Icons.Default.MusicOff else Icons.Default.MusicNote,
-                contentDescription = if (isMuted) "Unmute music" else "Mute music",
-                tint = NeonCyan
-            )
+            IconButton(onClick = { MusicManager.toggleMute() }) {
+                Icon(
+                    if (isMuted) Icons.Default.MusicOff else Icons.Default.MusicNote,
+                    contentDescription = if (isMuted) "Unmute music" else "Mute music",
+                    tint = NeonCyan
+                )
+            }
+            IconButton(onClick = { SfxManager.playTap(); HapticsManager.tap(); onNavigateToSettings() }) {
+                Icon(Icons.Default.Settings, contentDescription = "Settings", tint = NeonCyan)
+            }
         }
 
         Surface(
@@ -159,6 +168,18 @@ fun MainMenuScreen(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = 24.dp)
                     )
+                    if ((userState?.bestStreak ?: 0) > 0) {
+                        Spacer(Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.LocalFireDepartment, contentDescription = null, tint = Color(0xFFFF7A00), modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = "Streak: ${userState?.currentStreak ?: 0}  •  Best: ${userState?.bestStreak ?: 0}",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             }
 
@@ -170,7 +191,7 @@ fun MainMenuScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Button(
-                        onClick = onPlay,
+                        onClick = { SfxManager.playTap(); HapticsManager.tap(); onPlay() },
                         colors = ButtonDefaults.buttonColors(containerColor = NeonPurple),
                         modifier = Modifier.width(220.dp).height(56.dp)
                     ) {
@@ -180,7 +201,7 @@ fun MainMenuScreen(
                     Spacer(Modifier.height(16.dp))
 
                     OutlinedButton(
-                        onClick = onNavigateToStore,
+                        onClick = { SfxManager.playTap(); HapticsManager.tap(); onNavigateToStore() },
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = NeonPink),
                         modifier = Modifier.width(220.dp).height(48.dp)
                     ) {
