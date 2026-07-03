@@ -161,6 +161,23 @@ float fbm(float2 p) {
     return value;
 }
 
+// One layer of tiny drifting motes: a grid of cells, each with a randomly
+// placed, randomly sized dot that twinkles and slowly scrolls. Stacking a
+// few of these at different densities/speeds gives a parallax "snow" feel.
+float snowLayer(float2 p, float density, float speed, float seed, float time) {
+    float2 grid = p * density;
+    grid.y += time * speed;
+    grid.x += sin(time * 0.25 + seed) * 0.4;
+    float2 cell = floor(grid);
+    float2 f = fract(grid) - 0.5;
+    float rnd = hash(cell + seed);
+    float2 jitter = float2(hash(cell + seed + 3.1), hash(cell + seed + 7.7)) - 0.5;
+    float d = length(f - jitter * 0.7);
+    float twinkle = 0.5 + 0.5 * sin(time * 3.5 + rnd * 30.0);
+    float dotSize = mix(0.035, 0.11, rnd);
+    return smoothstep(dotSize, 0.0, d) * twinkle;
+}
+
 half4 main(float2 fragCoord) {
     float2 uv = fragCoord / resolution;
     float aspect = resolution.x / resolution.y;
@@ -186,6 +203,14 @@ half4 main(float2 fragCoord) {
     float3 col = base * (0.10 + fogMix * 0.18);
     col += rays * float3(1.0, 1.0, 1.0) * 0.10;
     col += pulseColor * pulseAmt * 0.5;
+
+    // Radioactive snow - three depth layers of tiny floating motes
+    float2 snowUv = uv * float2(aspect, 1.0);
+    float snowNear = snowLayer(snowUv, 9.0, 0.045, 1.0, iTime);
+    float snowMid = snowLayer(snowUv, 15.0, 0.075, 41.0, iTime);
+    float snowFar = snowLayer(snowUv, 23.0, 0.11, 97.0, iTime);
+    float3 snowColor = float3(0.68, 0.92, 0.0);
+    col += snowColor * (snowNear * 0.55 + snowMid * 0.4 + snowFar * 0.28);
 
     // Vignette
     float vig = smoothstep(0.95, 0.25, length(centered));

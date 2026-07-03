@@ -1,5 +1,18 @@
 # Bad Plots — Update Changelog
 
+## New: real 3D letter tiles (OpenGL ES pipeline)
+The word-guessing tiles (`LetterBox.kt`, removed) are replaced by `LetterTile3DGrid` (new `com.example.ui.render3d` package): every tile is now a genuinely lit, rotating 3D box rendered with a hand-written OpenGL ES 2.0 pipeline, not the old `graphicsLayer` rotationY/cameraDistance fake-perspective trick.
+- Real Blinn-Phong lighting (a directional key light + specular highlight that visibly sweeps across the tile face as it flips) and a soft cast shadow beneath every tile.
+- The flip is an actual 3D rotation: the box's thin edge is genuinely visible mid-turn, and the front (hidden) / back (revealed) faces are real opposite faces of one mesh rather than a content swap.
+- Also directly fixes the low-contrast complaint about the old dark/near-transparent tiles: the hidden-face material is now a lit, opaque slate fill with a bright accent-colored rim, clearly legible against the new busy cinema backdrop.
+- A single shared `GLSurfaceView` (via `TextureView`-safe `AndroidView` embedding, `setZOrderOnTop` + transparent EGL config) renders the whole word grid, using a from-scratch port of the original FlowRow word-wrap/sizing algorithm (`layoutTitleAsTiles`) so wrapping behavior is unchanged.
+- A light gyroscope-driven parallax tilt (accelerometer-based, a few degrees at most) makes the whole tile grid subtly reactive to how the phone is held.
+- Scope note: only the letter tiles got the real-3D treatment this pass. The keyboard, buttons, and cards keep the existing lightweight pseudo-3D (`graphicsLayer`) look, since those need reliable touch input and a full 3D input-picking layer for them is a separate, larger effort.
+- **Not verified beyond compilation** - no local Android SDK/emulator in the environment that wrote this. The GL pipeline (shaders, mesh winding, EGL transparency config, sensor lifecycle) has not been exercised on a real GPU/device. Test on an actual device before relying on this.
+
+## New: radioactive snow in the shader background
+`ShaderCinematicBackground` (AGSL path, API 33+) had no particle layer at all, unlike the legacy fallback which kept the original dust - this is why the background read as "less intricate" after the previous change. Added three parallax layers of tiny procedural, twinkling motes (`snowLayer` in the shader) tinted radioactive green, matching the look of the original `ParticleBackground` dust.
+
 ## New: Living Cinema background (AGSL shader)
 `ParticleBackground` (simple animated dust) is replaced by `LivingBackground` (`CinematicBackground.kt`, new), a full-screen animated backdrop with real depth: drifting volumetric fog (layered FBM noise), sweeping projector-style light rays, film grain, scanlines, and a vignette.
 - Runs as a GPU `RuntimeShader` (AGSL) on API 33+ (`ShaderCinematicBackground`).
@@ -34,7 +47,9 @@
 - Removed an unused icon import left over from earlier development.
 
 ## Files touched
-- `app/src/main/java/com/example/ui/screens/CinematicBackground.kt` — new
+- `app/src/main/java/com/example/ui/render3d/` — new package (`GLTileSupport.kt`, `LetterTileLayout.kt`, `TileSceneState.kt`, `LetterTileRenderer.kt`, `LetterTile3DGrid.kt`)
+- `app/src/main/java/com/example/ui/components/LetterBox.kt` — deleted, replaced by the render3d package
+- `app/src/main/java/com/example/ui/screens/CinematicBackground.kt` — new, then extended with the snow layer
 - `app/src/main/java/com/example/ui/screens/GameScreen.kt`
 - `app/src/main/java/com/example/ui/screens/MainMenuScreen.kt` — new
 - `app/src/main/java/com/example/MainActivity.kt`
@@ -48,3 +63,4 @@
 ## Not verified
 No network/Gradle/Android-SDK access in this environment, so changes are careful manual edits, not compiler-verified. Worth a build/run pass before shipping.
 - The AGSL shader in `CinematicBackground.kt` is hand-written and has not been compiled by the GPU shader compiler - that only happens on a real API 33+ device/emulator. If it fails to compile at runtime, `RuntimeShader` throws, so test on both an API 33+ target and an API 24-32 target (or emulator) to exercise both code paths before release.
+- The `render3d` OpenGL ES pipeline is entirely hand-written and has never run on a real GPU driver. Specifically worth checking on-device: the glyph orientation on the revealed (back) face isn't mirrored backwards; the shadow doesn't z-fight with the tile at some viewing angles; the `GLSurfaceView` transparency (`setZOrderOnTop` + `PixelFormat.TRANSLUCENT`) actually composites correctly over the shader background rather than punching an opaque hole; and performance holds up with a couple dozen tiles on screen for a long title.
