@@ -1,5 +1,10 @@
 # Bad Plots — Update Changelog
 
+## Fix: procedural movie posters clustering into one corner
+`ProceduralMoviePoster`'s "scattered circles" template indexed its 9-float random pool with `f[(i * 3) % f.size]` for the Y position - since `gcd(3, 9) = 3`, that expression only ever produces 3 distinct values (0, 3, 6) no matter how many circles are drawn, so every circle's Y collapsed onto the same 3 repeated values instead of spreading across the canvas. Confirmed via screenshots: circles bunched into the top-left corner on every affected movie, leaving most of the poster empty.
+- Replaced the whole `f[expr % f.size]`-style indexing scheme with `FloatCursor`, which hands out each pool value exactly once per draw (sequential, never re-indexed) - fixes the same bug class across all 5 templates, not just the one that happened to be visibly broken.
+- Pool size bumped from 9 to 32 (comfortably above the ~24 values the hungriest template needs), computed once per movie (`remember`), not regenerated per draw.
+
 ## New: standard mobile-game conventions pass (haptics, sfx, streaks, settings, share, rating)
 - **Haptics** (`HapticsManager`, new): short vibration feedback on correct/wrong guesses, win/loss, and button taps. Toggle persisted via SharedPreferences, same pattern as `MusicManager`. Added the `VIBRATE` permission to the manifest.
 - **Sound effects** (`SfxManager`, new): there were no SFX at all before this, only a music mute toggle. Since there are no audio asset files to load, each effect (correct/wrong/win/lose/tap) is a short procedurally-synthesized PCM tone played via `AudioTrack` - no new asset dependency.

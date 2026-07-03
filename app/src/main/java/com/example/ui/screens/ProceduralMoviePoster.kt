@@ -19,7 +19,25 @@ import kotlin.random.Random
 
 private val POSTER_PALETTE = listOf(NeonCyan, NeonPink, NeonPurple, RadioactiveGreen, RadioactiveYellowGreen, CorrectGreen)
 
-private data class PosterPlan(val template: Int, val colorA: Color, val colorB: Color, val colorC: Color, val seedFloats: List<Float>)
+/**
+ * A cursor over a precomputed pool of independent random floats, consumed
+ * sequentially and never re-indexed via modulo - the previous version reused
+ * a 9-float pool via expressions like `f[(i * 3) % f.size]`, which for
+ * size=9/stride=3 only ever yields 3 distinct values (gcd(3,9)=3), causing
+ * every shape to collapse onto the same few positions instead of spreading
+ * across the canvas. Always pulling the *next* untouched value avoids that
+ * whole bug class.
+ */
+private class FloatCursor(private val values: List<Float>) {
+    private var index = 0
+    fun next(): Float {
+        val v = values[index % values.size]
+        index++
+        return v
+    }
+}
+
+private data class PosterPlan(val template: Int, val colorA: Color, val colorB: Color, val colorC: Color, val randomPool: List<Float>)
 
 private fun planFor(title: String): PosterPlan {
     val rnd = Random(title.hashCode())
@@ -29,7 +47,9 @@ private fun planFor(title: String): PosterPlan {
         colorA = shuffled[0],
         colorB = shuffled[1],
         colorC = shuffled[2],
-        seedFloats = List(9) { rnd.nextFloat() }
+        // Generous pool - the hungriest template (scattered circles) only ever
+        // consumes 24 of these, so a fresh value is always available.
+        randomPool = List(32) { rnd.nextFloat() }
     )
 }
 
@@ -47,12 +67,12 @@ fun ProceduralMoviePoster(title: String, modifier: Modifier = Modifier) {
     Canvas(modifier = modifier.fillMaxSize()) {
         val w = size.width
         val h = size.height
-        val f = plan.seedFloats
+        val pool = FloatCursor(plan.randomPool)
         drawRect(color = DarkSurface)
 
         when (plan.template) {
             0 -> { // Concentric rings
-                val cx = w * (0.35f + f[0] * 0.3f)
+                val cx = w * (0.35f + pool.next() * 0.3f)
                 val cy = h * 0.5f
                 val maxR = minOf(w, h * 2f) * 0.42f
                 val colors = listOf(plan.colorA, plan.colorB, plan.colorC)
@@ -79,9 +99,9 @@ fun ProceduralMoviePoster(title: String, modifier: Modifier = Modifier) {
             }
             2 -> { // Scattered circles
                 for (i in 0 until 8) {
-                    val cx = w * f[i % f.size]
-                    val cy = h * f[(i * 3) % f.size]
-                    val r = minOf(w, h) * (0.06f + 0.16f * f[(i + 2) % f.size])
+                    val cx = w * pool.next()
+                    val cy = h * pool.next()
+                    val r = minOf(w, h) * (0.06f + 0.16f * pool.next())
                     val color = listOf(plan.colorA, plan.colorB, plan.colorC)[i % 3]
                     drawCircle(color = color.copy(alpha = 0.55f), radius = r, center = Offset(cx, cy))
                 }
@@ -89,10 +109,10 @@ fun ProceduralMoviePoster(title: String, modifier: Modifier = Modifier) {
             3 -> { // Triangle cluster
                 val triangles = listOf(plan.colorA, plan.colorB, plan.colorC)
                 for (i in 0 until 3) {
-                    val baseX = w * (0.15f + i * 0.3f + f[i] * 0.1f)
-                    val baseY = h * (0.85f + f[i + 3] * 0.1f)
-                    val height = h * (0.5f + f[i + 1] * 0.3f)
-                    val width = w * (0.25f + f[i + 2] * 0.15f)
+                    val baseX = w * (0.15f + i * 0.3f + pool.next() * 0.1f)
+                    val baseY = h * (0.85f + pool.next() * 0.1f)
+                    val height = h * (0.5f + pool.next() * 0.3f)
+                    val width = w * (0.25f + pool.next() * 0.15f)
                     val path = Path().apply {
                         moveTo(baseX, baseY)
                         lineTo(baseX + width / 2f, baseY - height)
@@ -111,7 +131,7 @@ fun ProceduralMoviePoster(title: String, modifier: Modifier = Modifier) {
                 val outerR = minOf(w, h) * 0.62f
                 val spread = 0.12f
                 for (i in 0 until rayCount) {
-                    val angle = (i.toFloat() / rayCount) * 2f * Math.PI.toFloat() + f[i % f.size]
+                    val angle = (i.toFloat() / rayCount) * 2f * Math.PI.toFloat() + pool.next()
                     val x1 = cx + kotlin.math.cos(angle - spread) * innerR
                     val y1 = cy + kotlin.math.sin(angle - spread) * innerR
                     val x2 = cx + kotlin.math.cos(angle + spread) * innerR
