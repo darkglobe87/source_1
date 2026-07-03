@@ -134,7 +134,7 @@ class LetterTileRenderer(
         Matrix.rotateM(modelMatrix, 0, tile.flipDeg, 0f, 1f, 0f)
 
         val glyphTextureId = glyphTextureCache.getOrPut(tile.char) {
-            val bmp = renderGlyphBitmap(tile.char, 128, colorFromFloats(hiddenColor), colorFromFloats(accent), 0xFF0A0A10.toInt())
+            val bmp = renderGlyphBitmap(tile.char, 128, colorFromFloats(hiddenColor), colorFromFloats(accent), colorFromFloats(accent))
             val id = uploadBitmapTexture(bmp)
             bmp.recycle()
             id

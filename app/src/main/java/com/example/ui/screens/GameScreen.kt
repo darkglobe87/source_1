@@ -219,12 +219,15 @@ fun GameScreen(
     // A brief background flash on win/loss - snaps to full and decays back to 0.
     val pulseAnim = androidx.compose.runtime.remember { Animatable(0f) }
     var pulseColor by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(NeonCyan) }
+    // Bumped once per win to fire a fresh confetti burst (see ConfettiBurst).
+    var confettiTrigger by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(0) }
     androidx.compose.runtime.LaunchedEffect(uiState.status) {
         when (uiState.status) {
             GameStatus.Won -> {
                 pulseColor = CorrectGreen
                 pulseAnim.snapTo(1f)
                 pulseAnim.animateTo(0f, animationSpec = tween(900, easing = FastOutSlowInEasing))
+                confettiTrigger++
             }
             GameStatus.Lost -> {
                 pulseColor = ErrorRed
@@ -498,6 +501,7 @@ fun GameScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
+        ConfettiBurst(trigger = confettiTrigger, modifier = Modifier.fillMaxSize())
         }
     }
 }
