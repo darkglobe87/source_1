@@ -1,5 +1,13 @@
 # Bad Plots — Update Changelog
 
+## New: real 3D main menu (title + PLAY/STORE)
+`MainMenuScreen`'s title (previously a `graphicsLayer` tilt trick) and PLAY/STORE buttons (previously flat Material buttons) are replaced by `Menu3DScene` (new, in `com.example.ui.render3d`): all three are real lit 3D objects sharing the same OpenGL pipeline as the letter tiles.
+- A gentle continuous idle rotation per object (bigger on the title, subtler on the buttons) instead of the old fixed tilt.
+- Buttons press in (scale down + push back in Z) on tap, with a spring back on release.
+- Touch handling deliberately stays in Compose: invisible clickable boxes are positioned to match the 3D buttons' on-screen rects (`MenuSceneLayout`, a single shared source of truth for both the renderer's object placement and the composable's hit-test rects), rather than doing real 3D touch picking - this keeps tap reliability independent of the 3D rendering.
+- Scope: matches the letter tiles' "hero elements only" approach - no procedural background environment or camera movement behind the menu, per the smaller/lower-risk option chosen over a fuller cinematic scene.
+- **Not verified beyond compilation**, same caveat as the letter tiles below - the button touch-target alignment and the label auto-shrink-to-fit text sizing especially need a real device check.
+
 ## New: real 3D letter tiles (OpenGL ES pipeline)
 The word-guessing tiles (`LetterBox.kt`, removed) are replaced by `LetterTile3DGrid` (new `com.example.ui.render3d` package): every tile is now a genuinely lit, rotating 3D box rendered with a hand-written OpenGL ES 2.0 pipeline, not the old `graphicsLayer` rotationY/cameraDistance fake-perspective trick.
 - Real Blinn-Phong lighting (a directional key light + specular highlight that visibly sweeps across the tile face as it flips) and a soft cast shadow beneath every tile.
@@ -47,11 +55,12 @@ The word-guessing tiles (`LetterBox.kt`, removed) are replaced by `LetterTile3DG
 - Removed an unused icon import left over from earlier development.
 
 ## Files touched
-- `app/src/main/java/com/example/ui/render3d/` — new package (`GLTileSupport.kt`, `LetterTileLayout.kt`, `TileSceneState.kt`, `LetterTileRenderer.kt`, `LetterTile3DGrid.kt`)
+- `app/src/main/java/com/example/ui/render3d/` — new package (`GLTileSupport.kt`, `LetterTileLayout.kt`, `TileSceneState.kt`, `LetterTileRenderer.kt`, `LetterTile3DGrid.kt`, `MenuSceneLayout.kt`, `MenuSceneState.kt`, `MenuSceneRenderer.kt`, `Menu3DScene.kt`)
 - `app/src/main/java/com/example/ui/components/LetterBox.kt` — deleted, replaced by the render3d package
 - `app/src/main/java/com/example/ui/screens/CinematicBackground.kt` — new, then extended with the snow layer
+- `app/src/main/java/com/example/ui/screens/ConfettiBurst.kt` — new
 - `app/src/main/java/com/example/ui/screens/GameScreen.kt`
-- `app/src/main/java/com/example/ui/screens/MainMenuScreen.kt` — new
+- `app/src/main/java/com/example/ui/screens/MainMenuScreen.kt` — new, then title/buttons replaced by Menu3DScene
 - `app/src/main/java/com/example/MainActivity.kt`
 - `app/src/main/java/com/example/viewmodel/GameViewModel.kt`
 - `app/src/main/res/values/colors.xml`

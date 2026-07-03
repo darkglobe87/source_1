@@ -19,20 +19,21 @@ import java.nio.FloatBuffer
  * the whole point of doing this in real 3D instead of faking it with a 2D
  * rotation trick: you actually see the tile's edge as it turns.
  */
-class TileMesh(halfExtentXY: Float = 0.5f, halfDepth: Float = 0.15f) {
+class TileMesh(halfWidth: Float = 0.5f, halfHeight: Float = halfWidth, halfDepth: Float = 0.15f) {
     val frontVertexBuffer: FloatBuffer
     val backVertexBuffer: FloatBuffer
     val sidesVertexBuffer: FloatBuffer
     val sidesIndexCount: Int
 
     init {
-        val hw = halfExtentXY
+        val hw = halfWidth
+        val hh = halfHeight
         val hd = halfDepth
 
         // Interleaved layout per vertex: position(3) normal(3) uv(2) = 8 floats
         frontVertexBuffer = quad(
-            floatArrayOf(-hw, -hw, hd), floatArrayOf(hw, -hw, hd),
-            floatArrayOf(hw, hw, hd), floatArrayOf(-hw, hw, hd),
+            floatArrayOf(-hw, -hh, hd), floatArrayOf(hw, -hh, hd),
+            floatArrayOf(hw, hh, hd), floatArrayOf(-hw, hh, hd),
             normal = floatArrayOf(0f, 0f, 1f),
             uvs = arrayOf(floatArrayOf(0f, 1f), floatArrayOf(1f, 1f), floatArrayOf(1f, 0f), floatArrayOf(0f, 0f))
         )
@@ -41,8 +42,8 @@ class TileMesh(halfExtentXY: Float = 0.5f, halfDepth: Float = 0.15f) {
         // at rest) with its U coordinate flipped so that once the box has
         // rotated 180deg about Y, the glyph reads correctly instead of mirrored.
         backVertexBuffer = quad(
-            floatArrayOf(hw, -hw, -hd), floatArrayOf(-hw, -hw, -hd),
-            floatArrayOf(-hw, hw, -hd), floatArrayOf(hw, hw, -hd),
+            floatArrayOf(hw, -hh, -hd), floatArrayOf(-hw, -hh, -hd),
+            floatArrayOf(-hw, hh, -hd), floatArrayOf(hw, hh, -hd),
             normal = floatArrayOf(0f, 0f, -1f),
             uvs = arrayOf(floatArrayOf(0f, 1f), floatArrayOf(1f, 1f), floatArrayOf(1f, 0f), floatArrayOf(0f, 0f))
         )
@@ -51,26 +52,26 @@ class TileMesh(halfExtentXY: Float = 0.5f, halfDepth: Float = 0.15f) {
         val sideFaces = listOf(
             // Top (+Y)
             quadFloats(
-                floatArrayOf(-hw, hw, hd), floatArrayOf(hw, hw, hd),
-                floatArrayOf(hw, hw, -hd), floatArrayOf(-hw, hw, -hd),
+                floatArrayOf(-hw, hh, hd), floatArrayOf(hw, hh, hd),
+                floatArrayOf(hw, hh, -hd), floatArrayOf(-hw, hh, -hd),
                 floatArrayOf(0f, 1f, 0f), blankUvs
             ),
             // Bottom (-Y)
             quadFloats(
-                floatArrayOf(-hw, -hw, -hd), floatArrayOf(hw, -hw, -hd),
-                floatArrayOf(hw, -hw, hd), floatArrayOf(-hw, -hw, hd),
+                floatArrayOf(-hw, -hh, -hd), floatArrayOf(hw, -hh, -hd),
+                floatArrayOf(hw, -hh, hd), floatArrayOf(-hw, -hh, hd),
                 floatArrayOf(0f, -1f, 0f), blankUvs
             ),
             // Right (+X)
             quadFloats(
-                floatArrayOf(hw, -hw, hd), floatArrayOf(hw, -hw, -hd),
-                floatArrayOf(hw, hw, -hd), floatArrayOf(hw, hw, hd),
+                floatArrayOf(hw, -hh, hd), floatArrayOf(hw, -hh, -hd),
+                floatArrayOf(hw, hh, -hd), floatArrayOf(hw, hh, hd),
                 floatArrayOf(1f, 0f, 0f), blankUvs
             ),
             // Left (-X)
             quadFloats(
-                floatArrayOf(-hw, -hw, -hd), floatArrayOf(-hw, -hw, hd),
-                floatArrayOf(-hw, hw, hd), floatArrayOf(-hw, hw, -hd),
+                floatArrayOf(-hw, -hh, -hd), floatArrayOf(-hw, -hh, hd),
+                floatArrayOf(-hw, hh, hd), floatArrayOf(-hw, hh, -hd),
                 floatArrayOf(-1f, 0f, 0f), blankUvs
             )
         )
@@ -268,5 +269,41 @@ fun renderGlyphBitmap(char: Char, sizePx: Int, fillColor: Int, rimColor: Int, te
     val text = char.uppercaseChar().toString()
     val textY = sizePx / 2f - (textPaint.descent() + textPaint.ascent()) / 2f
     canvas.drawText(text, sizePx / 2f, textY, textPaint)
+    return bmp
+}
+
+/**
+ * Renders a single line of uppercase text onto a wide rectangular bitmap, for
+ * the menu's 3D title/button labels (as opposed to the square per-letter tiles).
+ * Text size auto-shrinks to fit within the given width with some side margin.
+ */
+fun renderLabelBitmap(text: String, widthPx: Int, heightPx: Int, fillColor: Int, rimColor: Int, textColor: Int): Bitmap {
+    val bmp = Bitmap.createBitmap(widthPx, heightPx, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bmp)
+    val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = fillColor }
+    val rimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = rimColor
+        style = Paint.Style.STROKE
+        strokeWidth = heightPx * 0.06f
+    }
+    val corner = heightPx * 0.2f
+    val rect = RectF(0f, 0f, widthPx.toFloat(), heightPx.toFloat())
+    canvas.drawRoundRect(rect, corner, corner, fillPaint)
+    val inset = rimPaint.strokeWidth / 2f
+    canvas.drawRoundRect(RectF(inset, inset, widthPx - inset, heightPx - inset), corner, corner, rimPaint)
+
+    val upper = text.uppercase()
+    val maxTextWidth = widthPx * 0.82f
+    val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = textColor
+        textAlign = Paint.Align.CENTER
+        isFakeBoldText = true
+        textSize = heightPx * 0.5f
+    }
+    while (textPaint.measureText(upper) > maxTextWidth && textPaint.textSize > 4f) {
+        textPaint.textSize -= 1f
+    }
+    val textY = heightPx / 2f - (textPaint.descent() + textPaint.ascent()) / 2f
+    canvas.drawText(upper, widthPx / 2f, textY, textPaint)
     return bmp
 }
