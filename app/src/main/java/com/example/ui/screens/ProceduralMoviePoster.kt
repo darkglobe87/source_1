@@ -1,14 +1,17 @@
 package com.example.ui.screens
 
+import android.graphics.Region
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import com.example.ui.theme.CorrectGreen
@@ -213,7 +216,36 @@ private fun DrawScope.drawSpecificIcon(title: String, w: Float, h: Float, colorA
             val house = Path().apply { moveTo(w * 0.3f, h * 0.9f); lineTo(w * 0.3f, h * 0.55f); lineTo(w * 0.5f, h * 0.35f); lineTo(w * 0.7f, h * 0.55f); lineTo(w * 0.7f, h * 0.9f); close() }
             drawPath(house, color = colorC)
             drawRect(color = Color(0xFFFFD700), topLeft = Offset(w * 0.42f, h * 0.7f), size = Size(w * 0.16f, h * 0.2f))
-            drawCircle(color = ErrorRed, radius = minOf(w, h) * 0.06f, center = Offset(w * 0.82f, h * 0.8f))
+
+            // Was one bare red circle for "paint cans on the stairs" - a circle
+            // could be anything. Now actual steps with two stippled cans on them.
+            for (i in 0 until 3) {
+                val stepY = h * (0.68f + i * 0.07f)
+                drawRect(color = colorC.copy(alpha = 0.55f), topLeft = Offset(w * (0.76f + i * 0.025f), stepY), size = Size(w * 0.18f, h * 0.045f))
+            }
+            for (i in 0 until 2) {
+                val canW = w * 0.055f
+                val canH = h * 0.09f
+                val canX = w * (0.8f + i * 0.075f)
+                val canBottom = h * (0.68f - i * 0.07f)
+                val can = Path().apply { addRect(Rect(canX, canBottom - canH, canX + canW, canBottom)) }
+                drawStippled(
+                    path = can,
+                    dotColor = ErrorRed,
+                    minDist = minOf(w, h) * 0.012f,
+                    dotRadius = minOf(w, h) * 0.0055f,
+                    seed = title.hashCode() + i,
+                    outlineColor = Color.White.copy(alpha = 0.4f),
+                    lightCenter = Offset(canX + canW * 0.25f, canBottom - canH)
+                )
+                drawArc(
+                    color = Color(0xFFAAAAAA),
+                    startAngle = 200f, sweepAngle = 140f, useCenter = false,
+                    topLeft = Offset(canX - canW * 0.1f, canBottom - canH - canW * 0.35f),
+                    size = Size(canW * 1.2f, canW * 0.7f),
+                    style = Stroke(width = minOf(w, h) * 0.006f)
+                )
+            }
         }
         "Finding Nemo" -> {
             val body = Path().apply {
@@ -257,25 +289,88 @@ private fun DrawScope.drawSpecificIcon(title: String, w: Float, h: Float, colorA
             drawPath(feather, color = Color.White.copy(alpha = 0.85f))
         }
         "Spider-Man" -> {
-            val cx = w * 0.5f
-            val cy = h * 0.5f
-            val maxR = minOf(w, h) * 0.45f
+            // Web re-centered to leave room for an actual spider - the old
+            // version's plain red dot at dead center read as a targeting
+            // reticle, not a spider on its web.
+            val webCx = w * 0.62f
+            val webCy = h * 0.36f
+            val maxR = minOf(w, h) * 0.38f
             for (i in 0 until 6) {
                 val angle = (i / 6f) * 2f * Math.PI.toFloat()
-                drawLine(color = Color.White.copy(alpha = 0.5f), start = Offset(cx, cy), end = Offset(cx + kotlin.math.cos(angle) * maxR, cy + kotlin.math.sin(angle) * maxR), strokeWidth = minOf(w, h) * 0.008f)
+                drawLine(color = Color.White.copy(alpha = 0.5f), start = Offset(webCx, webCy), end = Offset(webCx + kotlin.math.cos(angle) * maxR, webCy + kotlin.math.sin(angle) * maxR), strokeWidth = minOf(w, h) * 0.008f)
             }
             for (ring in 1..3) {
-                drawCircle(color = Color.White.copy(alpha = 0.4f), radius = maxR * ring / 3.5f, center = Offset(cx, cy), style = Stroke(width = minOf(w, h) * 0.008f))
+                drawCircle(color = Color.White.copy(alpha = 0.4f), radius = maxR * ring / 3.5f, center = Offset(webCx, webCy), style = Stroke(width = minOf(w, h) * 0.008f))
             }
-            drawCircle(color = ErrorRed.copy(alpha = 0.85f), radius = minOf(w, h) * 0.09f, center = Offset(cx, cy))
+
+            // The spider itself: legs as simple strokes (stippling something
+            // that thin just looks noisy), body stippled so it reads as a
+            // textured abdomen instead of a flat dot.
+            val sx = w * 0.26f
+            val sy = h * 0.72f
+            val bodyR = minOf(w, h) * 0.075f
+            val legLen = bodyR * 3f
+            for (i in 0 until 4) {
+                val spread = 0.3f + i * 0.32f
+                val dx = kotlin.math.cos(spread) * legLen
+                val dy = kotlin.math.sin(spread) * legLen
+                drawLine(color = Color(0xFF1A1A1A), start = Offset(sx, sy), end = Offset(sx - dx, sy + legLen * 0.4f - dy), strokeWidth = minOf(w, h) * 0.011f)
+                drawLine(color = Color(0xFF1A1A1A), start = Offset(sx, sy), end = Offset(sx + dx, sy + legLen * 0.4f - dy), strokeWidth = minOf(w, h) * 0.011f)
+            }
+            val body = Path().apply { addOval(Rect(sx - bodyR, sy - bodyR * 0.85f, sx + bodyR, sy + bodyR * 0.85f)) }
+            drawStippled(
+                path = body,
+                dotColor = ErrorRed,
+                minDist = minOf(w, h) * 0.016f,
+                dotRadius = minOf(w, h) * 0.0075f,
+                seed = title.hashCode(),
+                outlineColor = Color(0xFF1A1A1A),
+                lightCenter = Offset(sx - bodyR * 0.3f, sy - bodyR * 0.4f)
+            )
         }
         "Interstellar" -> {
-            drawCircle(color = colorC, radius = minOf(w, h) * 0.18f, center = Offset(w * 0.4f, h * 0.45f))
-            drawOval(color = colorA.copy(alpha = 0.6f), topLeft = Offset(w * 0.15f, h * 0.42f), size = Size(w * 0.5f, h * 0.08f))
-            drawRect(color = colorB, topLeft = Offset(w * 0.72f, h * 0.6f), size = Size(w * 0.08f, h * 0.22f))
+            drawCircle(color = colorC, radius = minOf(w, h) * 0.15f, center = Offset(w * 0.24f, h * 0.32f))
+            drawOval(color = colorA.copy(alpha = 0.6f), topLeft = Offset(w * 0.02f, h * 0.3f), size = Size(w * 0.44f, h * 0.07f))
+
+            // Was one bare rectangle standing in for "bookshelf" - carried zero
+            // information. Now an actual shelf of separately stippled book
+            // spines at varied heights, which is what makes it read as books.
+            val shelfLeft = w * 0.52f
+            val shelfBottom = h * 0.84f
+            val shelfTop = h * 0.3f
+            val bookCount = 6
+            val bookW = (w * 0.42f) / bookCount
+            val rng = Random(title.hashCode())
+            for (i in 0 until bookCount) {
+                val bx = shelfLeft + i * bookW
+                val bh = (shelfBottom - shelfTop) * (0.5f + rng.nextFloat() * 0.5f)
+                val book = Path().apply { addRect(Rect(bx + bookW * 0.1f, shelfBottom - bh, bx + bookW * 0.9f, shelfBottom)) }
+                drawStippled(
+                    path = book,
+                    dotColor = if (i % 2 == 0) colorB else colorA,
+                    minDist = minOf(w, h) * 0.015f,
+                    dotRadius = minOf(w, h) * 0.0075f,
+                    seed = title.hashCode() + i,
+                    outlineColor = Color.White.copy(alpha = 0.3f),
+                    lightCenter = Offset(bx + bookW / 2f, shelfBottom - bh)
+                )
+            }
+            drawRect(color = colorC, topLeft = Offset(shelfLeft - w * 0.015f, shelfBottom), size = Size(w * 0.45f, h * 0.025f))
         }
         "Fight Club" -> {
-            drawRect(color = Color(0xFFF0E6D2), topLeft = Offset(w * 0.35f, h * 0.4f), size = Size(w * 0.3f, h * 0.2f))
+            // Soap gets grain/fleck texture instead of being a flat tan card -
+            // stippling here reads as a bar of soap rather than a rectangle
+            // that happens to have an X over it.
+            val soap = Path().apply { addRect(Rect(w * 0.35f, h * 0.4f, w * 0.65f, h * 0.6f)) }
+            drawStippled(
+                path = soap,
+                dotColor = Color(0xFFF0E6D2),
+                minDist = minOf(w, h) * 0.013f,
+                dotRadius = minOf(w, h) * 0.0055f,
+                seed = title.hashCode(),
+                outlineColor = Color(0xFFF0E6D2).copy(alpha = 0.55f),
+                lightCenter = Offset(w * 0.42f, h * 0.45f)
+            )
             drawLine(color = colorA, start = Offset(w * 0.3f, h * 0.3f), end = Offset(w * 0.7f, h * 0.7f), strokeWidth = minOf(w, h) * 0.025f)
             drawLine(color = colorA, start = Offset(w * 0.7f, h * 0.3f), end = Offset(w * 0.3f, h * 0.7f), strokeWidth = minOf(w, h) * 0.025f)
         }
@@ -405,6 +500,129 @@ private fun DrawScope.drawStar(center: Offset, radius: Float, color: Color) {
     }
     path.close()
     drawPath(path, color = color)
+}
+
+/**
+ * Bridson's algorithm for Poisson-disc ("blue noise") sampling: points that
+ * are all at least [minDist] apart but packed as densely as that constraint
+ * allows. This is the actual point-distribution used in real stippling and
+ * pointillism art - it looks organic where a jittered grid looks mechanical
+ * and plain random sampling clumps in some spots and leaves gaps in others.
+ * Pure geometry, seeded by [seed] so a given shape stipples identically
+ * every time it's drawn (same spirit as this file's title-seeded palettes).
+ */
+private fun poissonDiscSample(width: Float, height: Float, minDist: Float, maxAttempts: Int = 30, seed: Int = 0): List<Offset> {
+    if (width <= 0f || height <= 0f || minDist <= 0f) return emptyList()
+    val rng = Random(seed)
+    val cellSize = minDist / kotlin.math.sqrt(2f)
+    val gridW = kotlin.math.ceil(width / cellSize).toInt() + 1
+    val gridH = kotlin.math.ceil(height / cellSize).toInt() + 1
+    val grid = arrayOfNulls<Offset>(gridW * gridH)
+
+    fun cellOf(p: Offset) = (p.y / cellSize).toInt() * gridW + (p.x / cellSize).toInt()
+
+    fun farEnough(p: Offset): Boolean {
+        if (p.x < 0f || p.x >= width || p.y < 0f || p.y >= height) return false
+        val gx = (p.x / cellSize).toInt()
+        val gy = (p.y / cellSize).toInt()
+        for (dy in -2..2) {
+            for (dx in -2..2) {
+                val nx = gx + dx
+                val ny = gy + dy
+                if (nx in 0 until gridW && ny in 0 until gridH) {
+                    val n = grid[ny * gridW + nx] ?: continue
+                    val ddx = n.x - p.x
+                    val ddy = n.y - p.y
+                    if (ddx * ddx + ddy * ddy < minDist * minDist) return false
+                }
+            }
+        }
+        return true
+    }
+
+    val first = Offset(rng.nextFloat() * width, rng.nextFloat() * height)
+    val points = mutableListOf(first)
+    val active = mutableListOf(first)
+    grid[cellOf(first)] = first
+
+    while (active.isNotEmpty()) {
+        val idx = active.indices.random(rng)
+        val origin = active[idx]
+        var placed = false
+        for (attempt in 0 until maxAttempts) {
+            val angle = rng.nextFloat() * 2f * Math.PI.toFloat()
+            val radius = minDist * (1f + rng.nextFloat())
+            val candidate = Offset(origin.x + kotlin.math.cos(angle) * radius, origin.y + kotlin.math.sin(angle) * radius)
+            if (farEnough(candidate)) {
+                points += candidate
+                active += candidate
+                grid[cellOf(candidate)] = candidate
+                placed = true
+                break
+            }
+        }
+        if (!placed) active.removeAt(idx)
+    }
+    return points
+}
+
+/**
+ * Fills the interior of [path] with a dense field of small dots placed via
+ * Poisson-disc sampling, instead of one flat shape - this is the "many many
+ * small shapes" approach: any silhouette (bookshelf, soap bar, paint can,
+ * spider body...) reads as a textured object with real presence rather than
+ * a bare rectangle/circle, without needing a bespoke hand-drawn path for
+ * every possible concept. A crisp stroke of the true [path] boundary is
+ * drawn on top (unless [outlineColor] is null) so the silhouette stays
+ * instantly readable even though the fill is built from hundreds of points -
+ * complexity in the texture, clarity in the edge.
+ *
+ * [lightCenter], if given, biases dot size/opacity so points closer to it
+ * are bigger and brighter - a cheap pseudo-shading trick that adds a sense
+ * of volume without an actual gradient.
+ *
+ * Point-in-shape testing goes through android.graphics.Region rather than a
+ * hand-rolled polygon test, so it works correctly for any path this file
+ * already builds - straight edges, quadraticBezierTo curves, multiple
+ * subpaths - not just simple polygons.
+ */
+private fun DrawScope.drawStippled(
+    path: Path,
+    dotColor: Color,
+    minDist: Float,
+    dotRadius: Float,
+    seed: Int,
+    outlineColor: Color? = Color.White.copy(alpha = 0.35f),
+    outlineWidth: Float = 1.5f,
+    lightCenter: Offset? = null
+) {
+    val bounds = path.getBounds()
+    if (bounds.width <= 0f || bounds.height <= 0f) return
+
+    val region = Region().apply {
+        setPath(
+            path.asAndroidPath(),
+            Region(bounds.left.toInt(), bounds.top.toInt(), bounds.right.toInt() + 1, bounds.bottom.toInt() + 1)
+        )
+    }
+
+    val localPoints = poissonDiscSample(bounds.width, bounds.height, minDist, seed = seed)
+    val light = lightCenter ?: Offset(bounds.left, bounds.top)
+    val diag = kotlin.math.hypot(bounds.width, bounds.height).coerceAtLeast(1f)
+    val rng = Random(seed xor 0x5bd1e995.toInt())
+
+    for (lp in localPoints) {
+        val x = bounds.left + lp.x
+        val y = bounds.top + lp.y
+        if (!region.contains(x.toInt(), y.toInt())) continue
+        val t = 1f - (kotlin.math.hypot(x - light.x, y - light.y) / diag).coerceIn(0f, 1f)
+        val r = dotRadius * (0.55f + 0.6f * t) * (0.7f + rng.nextFloat() * 0.6f)
+        drawCircle(color = dotColor.copy(alpha = (0.5f + 0.5f * t).coerceIn(0f, 1f)), radius = r, center = Offset(x, y))
+    }
+
+    if (outlineColor != null) {
+        drawPath(path, color = outlineColor, style = Stroke(width = outlineWidth))
+    }
 }
 
 private fun DrawScope.drawMoodPoster(mood: Mood, colorA: Color, colorB: Color, colorC: Color, w: Float, h: Float) {
