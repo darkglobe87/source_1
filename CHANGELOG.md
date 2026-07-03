@@ -1,22 +1,13 @@
 # Bad Plots — Update Changelog
 
-## New: real 3D main menu (title + PLAY/STORE)
-`MainMenuScreen`'s title (previously a `graphicsLayer` tilt trick) and PLAY/STORE buttons (previously flat Material buttons) are replaced by `Menu3DScene` (new, in `com.example.ui.render3d`): all three are real lit 3D objects sharing the same OpenGL pipeline as the letter tiles.
-- A gentle continuous idle rotation per object (bigger on the title, subtler on the buttons) instead of the old fixed tilt.
-- Buttons press in (scale down + push back in Z) on tap, with a spring back on release.
-- Touch handling deliberately stays in Compose: invisible clickable boxes are positioned to match the 3D buttons' on-screen rects (`MenuSceneLayout`, a single shared source of truth for both the renderer's object placement and the composable's hit-test rects), rather than doing real 3D touch picking - this keeps tap reliability independent of the 3D rendering.
-- Scope: matches the letter tiles' "hero elements only" approach - no procedural background environment or camera movement behind the menu, per the smaller/lower-risk option chosen over a fuller cinematic scene.
-- **Not verified beyond compilation**, same caveat as the letter tiles below - the button touch-target alignment and the label auto-shrink-to-fit text sizing especially need a real device check.
+## Reverted: real 3D letter tiles and 3D main menu
+Both the hand-written OpenGL ES letter tiles (`com.example.ui.render3d`, `LetterTile3DGrid`) and the 3D title/PLAY/STORE menu (`Menu3DScene`) were tried, built to compile cleanly, but looked bad in practice once actually seen on a device. Reverted to the original `LetterBox.kt` (FlowRow-of-2D-boxes with the `graphicsLayer` flip) and the original `MainMenuScreen` title/buttons.
+- Lesson: this whole custom-GLES detour was written and iterated on without ever being able to see it render - CI only proves it compiles, not that it looks right. Visual/UX work in this project needs an actual look before committing further effort to a given technique, not just a green build.
+- Kept: the glyph-text-color and tile-contrast fixes are moot now (reverted along with the tiles), but the *reason* they were needed - low contrast against the busier cinema backdrop - is still worth keeping in mind for whatever replaces this.
+- Also kept: the win confetti, the shader background (fog/rays/grain/vignette/snow), and its danger/pulse reactivity - none of that was part of the complaint.
 
-## New: real 3D letter tiles (OpenGL ES pipeline)
-The word-guessing tiles (`LetterBox.kt`, removed) are replaced by `LetterTile3DGrid` (new `com.example.ui.render3d` package): every tile is now a genuinely lit, rotating 3D box rendered with a hand-written OpenGL ES 2.0 pipeline, not the old `graphicsLayer` rotationY/cameraDistance fake-perspective trick.
-- Real Blinn-Phong lighting (a directional key light + specular highlight that visibly sweeps across the tile face as it flips) and a soft cast shadow beneath every tile.
-- The flip is an actual 3D rotation: the box's thin edge is genuinely visible mid-turn, and the front (hidden) / back (revealed) faces are real opposite faces of one mesh rather than a content swap.
-- Also directly fixes the low-contrast complaint about the old dark/near-transparent tiles: the hidden-face material is now a lit, opaque slate fill with a bright accent-colored rim, clearly legible against the new busy cinema backdrop.
-- A single shared `GLSurfaceView` (via `TextureView`-safe `AndroidView` embedding, `setZOrderOnTop` + transparent EGL config) renders the whole word grid, using a from-scratch port of the original FlowRow word-wrap/sizing algorithm (`layoutTitleAsTiles`) so wrapping behavior is unchanged.
-- A light gyroscope-driven parallax tilt (accelerometer-based, a few degrees at most) makes the whole tile grid subtly reactive to how the phone is held.
-- Scope note: only the letter tiles got the real-3D treatment this pass. The keyboard, buttons, and cards keep the existing lightweight pseudo-3D (`graphicsLayer`) look, since those need reliable touch input and a full 3D input-picking layer for them is a separate, larger effort.
-- **Not verified beyond compilation** - no local Android SDK/emulator in the environment that wrote this. The GL pipeline (shaders, mesh winding, EGL transparency config, sensor lifecycle) has not been exercised on a real GPU/device. Test on an actual device before relying on this.
+## New: win confetti
+`ConfettiBurst` (new, `com.example.ui.screens`): a full-screen burst of ~140 tumbling, colored pieces that fires once when a level is won (not on loss), then clears itself after a few seconds.
 
 ## New: radioactive snow in the shader background
 `ShaderCinematicBackground` (AGSL path, API 33+) had no particle layer at all, unlike the legacy fallback which kept the original dust - this is why the background read as "less intricate" after the previous change. Added three parallax layers of tiny procedural, twinkling motes (`snowLayer` in the shader) tinted radioactive green, matching the look of the original `ParticleBackground` dust.
@@ -55,12 +46,12 @@ The word-guessing tiles (`LetterBox.kt`, removed) are replaced by `LetterTile3DG
 - Removed an unused icon import left over from earlier development.
 
 ## Files touched
-- `app/src/main/java/com/example/ui/render3d/` — new package (`GLTileSupport.kt`, `LetterTileLayout.kt`, `TileSceneState.kt`, `LetterTileRenderer.kt`, `LetterTile3DGrid.kt`, `MenuSceneLayout.kt`, `MenuSceneState.kt`, `MenuSceneRenderer.kt`, `Menu3DScene.kt`)
-- `app/src/main/java/com/example/ui/components/LetterBox.kt` — deleted, replaced by the render3d package
+- `app/src/main/java/com/example/ui/render3d/` — added, then removed entirely (reverted)
+- `app/src/main/java/com/example/ui/components/LetterBox.kt` — restored to its original form after a brief detour through render3d
 - `app/src/main/java/com/example/ui/screens/CinematicBackground.kt` — new, then extended with the snow layer
 - `app/src/main/java/com/example/ui/screens/ConfettiBurst.kt` — new
 - `app/src/main/java/com/example/ui/screens/GameScreen.kt`
-- `app/src/main/java/com/example/ui/screens/MainMenuScreen.kt` — new, then title/buttons replaced by Menu3DScene
+- `app/src/main/java/com/example/ui/screens/MainMenuScreen.kt` — new, title/buttons briefly replaced by Menu3DScene then reverted
 - `app/src/main/java/com/example/MainActivity.kt`
 - `app/src/main/java/com/example/viewmodel/GameViewModel.kt`
 - `app/src/main/res/values/colors.xml`
@@ -72,4 +63,3 @@ The word-guessing tiles (`LetterBox.kt`, removed) are replaced by `LetterTile3DG
 ## Not verified
 No network/Gradle/Android-SDK access in this environment, so changes are careful manual edits, not compiler-verified. Worth a build/run pass before shipping.
 - The AGSL shader in `CinematicBackground.kt` is hand-written and has not been compiled by the GPU shader compiler - that only happens on a real API 33+ device/emulator. If it fails to compile at runtime, `RuntimeShader` throws, so test on both an API 33+ target and an API 24-32 target (or emulator) to exercise both code paths before release.
-- The `render3d` OpenGL ES pipeline is entirely hand-written and has never run on a real GPU driver. Specifically worth checking on-device: the glyph orientation on the revealed (back) face isn't mirrored backwards; the shadow doesn't z-fight with the tile at some viewing angles; the `GLSurfaceView` transparency (`setZOrderOnTop` + `PixelFormat.TRANSLUCENT`) actually composites correctly over the shader background rather than punching an opaque hole; and performance holds up with a couple dozen tiles on screen for a long title.

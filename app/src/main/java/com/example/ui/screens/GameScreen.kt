@@ -39,7 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.KeyboardKey
-import com.example.ui.render3d.LetterTile3DGrid
+import com.example.ui.components.LetterBox
 import com.example.ui.theme.NeonCyan
 import com.example.ui.theme.NeonPink
 import com.example.ui.theme.DarkBackground
@@ -166,7 +166,7 @@ fun HowToPlayDialog(onDismiss: () -> Unit) {
  * on spaces (handled by the caller) and after hyphens, so "Spider-Man" can break
  * into "Spider-" / "Man" instead of being one unbreakable 10-letter run.
  */
-internal fun splitIntoWrapSegments(word: String): List<String> {
+private fun splitIntoWrapSegments(word: String): List<String> {
     val segments = mutableListOf<String>()
     val current = StringBuilder()
     for (c in word) {
@@ -377,14 +377,48 @@ fun GameScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Word Layout - real 3D tiles (see com.example.ui.render3d), not the
-                // old FlowRow-of-2D-boxes.
-                LetterTile3DGrid(
-                    title = uiState.currentMovie?.title ?: "",
-                    guessedLetters = uiState.guessedLetters,
-                    dangerLevel = dangerLevel,
-                    accentColor = NeonCyan
-                )
+                // Word Layout
+                BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                    val title = uiState.currentMovie?.title ?: ""
+                    val words = title.split(" ")
+                    val longestSegmentLen = (words
+                        .flatMap { splitIntoWrapSegments(it) }
+                        .maxOfOrNull { it.length } ?: 1)
+                        .coerceAtLeast(1)
+                    val letterSpacing = 4.dp
+                    val dynamicSize = ((maxWidth - letterSpacing * (longestSegmentLen - 1)) / longestSegmentLen)
+                        .coerceIn(26.dp, 40.dp)
+
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        words.forEach { word ->
+                            // A FlowRow per word too: if a segment is ever still too
+                            // wide even at minimum size, it wraps instead of clipping.
+                            FlowRow(
+                                modifier = Modifier.padding(end = 18.dp),
+                                horizontalArrangement = Arrangement.spacedBy(letterSpacing),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                splitIntoWrapSegments(word).forEach { segment ->
+                                    Row(horizontalArrangement = Arrangement.spacedBy(letterSpacing)) {
+                                        segment.forEach { char ->
+                                            val isRevealed = char.uppercaseChar() in uiState.guessedLetters
+                                            LetterBox(
+                                                char = char,
+                                                isRevealed = isRevealed,
+                                                isSpace = false,
+                                                size = dynamicSize
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.weight(1f))
