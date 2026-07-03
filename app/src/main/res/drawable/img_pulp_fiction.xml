@@ -1,0 +1,14 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="160dp"
+    android:viewportWidth="320"
+    android:viewportHeight="160">
+    <!-- Abstract "glowing briefcase" motif - retro/noir mood, not a poster recreation -->
+    <path android:fillColor="#0A0A10" android:pathData="M0,0 L320,0 L320,160 L0,160 Z"/>
+    <path android:fillColor="#FFD700" android:fillAlpha="0.16" android:pathData="M95,80 A65,65 0 1,0 225,80 A65,65 0 1,0 95,80 Z"/>
+    <path android:fillColor="#FFD700" android:fillAlpha="0.24" android:pathData="M115,80 A45,45 0 1,0 205,80 A45,45 0 1,0 115,80 Z"/>
+    <path android:fillColor="#1A1410" android:pathData="M120,65 L200,65 L200,115 L120,115 Z"/>
+    <path android:fillColor="#1A1410" android:pathData="M150,48 L170,48 L170,58 L150,58 Z"/>
+    <path android:fillColor="#FFD700" android:pathData="M135,85 L145,85 L145,95 L135,95 Z"/>
+    <path android:fillColor="#FFD700" android:pathData="M175,85 L185,85 L185,95 L175,95 Z"/>
+</vector>

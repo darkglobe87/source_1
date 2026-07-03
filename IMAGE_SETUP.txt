@@ -1,11 +1,20 @@
 HOW TO ADD MOVIE ARTWORK
 =========================
 
-Four movies are now wired to show artwork above their description, if the
-image file is present. The app builds and runs fine WITHOUT these files -
-missing art just means that movie shows text only, same as before.
+Every movie now shows artwork above its description - either a specific
+drawable (for the 4 movies below) or an automatically generated abstract
+"poster" (ProceduralMoviePoster.kt) for everything else, seeded by the movie's
+title so the same movie always looks the same. Nothing here depicts real
+characters or recreates any actual poster - it's all original/generated, to
+stay clear of using copyrighted movie art.
 
-Movies expecting art, and the EXACT filename each one needs:
+Four movies have a specific hand-made drawable (img_shrek.xml,
+img_lord_of_the_rings.xml, img_pulp_fiction.xml, img_jaws.xml, already in
+app/src/main/res/drawable/) instead of the generated fallback. If you want to
+replace any of these with real licensed artwork later, just overwrite the
+matching filename below - the code looks it up by name, nothing else to change.
+
+Movies expecting a specific file, and the EXACT filename each one needs:
 
     Shrek                    -> img_shrek.png
     The Lord of the Rings    -> img_lord_of_the_rings.png

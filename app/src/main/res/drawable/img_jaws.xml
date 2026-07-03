@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="160dp"
+    android:viewportWidth="320"
+    android:viewportHeight="160">
+    <!-- Abstract "fin cutting through waves" motif, not a recreation of any specific poster -->
+    <path android:fillColor="#04202E" android:pathData="M0,0 L320,0 L320,160 L0,160 Z"/>
+    <path
+        android:fillColor="#0B3B52"
+        android:pathData="M0,120 C40,110 80,130 120,120 C160,110 200,130 240,120 C280,110 320,130 320,120 L320,160 L0,160 Z"/>
+    <path
+        android:fillColor="#124A66"
+        android:fillAlpha="0.8"
+        android:pathData="M0,102 C40,94 80,110 120,102 C160,94 200,110 240,102 C280,94 320,110 320,102 L320,160 L0,160 Z"/>
+    <path android:fillColor="#0A0A10" android:pathData="M150,96 C160,56 175,41 186,35 C178,55 172,76 168,96 Z"/>
+</vector>

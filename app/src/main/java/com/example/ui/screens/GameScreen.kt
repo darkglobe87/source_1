@@ -346,25 +346,32 @@ fun GameScreen(
                     elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                 ) {
                     Column(Modifier.padding(16.dp)) {
+                        val movieTitle = uiState.currentMovie?.title ?: ""
                         val imageName = uiState.currentMovie?.imageRes
-                        if (imageName != null) {
-                            val context = LocalContext.current
-                            val resId = androidx.compose.runtime.remember(imageName) {
-                                context.resources.getIdentifier(imageName, "drawable", context.packageName)
-                            }
-                            if (resId != 0) {
-                                Image(
-                                    painter = painterResource(id = resId),
-                                    contentDescription = "Movie art",
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(160.dp)
-                                        .clip(RoundedCornerShape(8.dp)),
-                                    contentScale = ContentScale.Fit
-                                )
-                                Spacer(modifier = Modifier.height(12.dp))
-                            }
+                        val context = LocalContext.current
+                        val resId = androidx.compose.runtime.remember(imageName) {
+                            if (imageName != null) context.resources.getIdentifier(imageName, "drawable", context.packageName) else 0
                         }
+                        if (resId != 0) {
+                            Image(
+                                painter = painterResource(id = resId),
+                                contentDescription = "Movie art",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(160.dp)
+                                    .clip(RoundedCornerShape(8.dp)),
+                                contentScale = ContentScale.Fit
+                            )
+                        } else {
+                            ProceduralMoviePoster(
+                                title = movieTitle,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(160.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = "\"${uiState.currentMovie?.badDescription}\"",
                             fontSize = 18.sp,

@@ -1,5 +1,12 @@
 # Bad Plots — Update Changelog
 
+## New: every movie now shows artwork
+Previously only 4 movies had artwork wired up (`imageRes` in `movies.json`), and none of the 4 image files actually existed anywhere in the project - `IMAGE_SETUP.txt` described where to add them, but they were never added.
+- Added hand-made abstract vector art for the 4 named movies (`img_shrek.xml`, `img_lord_of_the_rings.xml`, `img_pulp_fiction.xml`, `img_jaws.xml`, in `res/drawable/`) - symbolic/geometric motifs (layered rings, a ring + mountains, a glowing briefcase, a fin through waves), not depictions of actual characters or recreations of real poster art, to stay clear of copyright.
+- Added `ProceduralMoviePoster` (new, `com.example.ui.screens`): a deterministic, title-seeded abstract "poster" (Compose `Canvas`, one of 5 composition templates, colors drawn from the app's existing neon palette) for the other 32 movies that don't have a specific drawable. Same movie always produces the same look.
+- `GameScreen`'s movie-art block now always shows something - the specific drawable if one resolves, the generated poster otherwise - instead of showing nothing for movies without art.
+- `IMAGE_SETUP.txt` updated to reflect this; still explains how to drop in real licensed art later to override any of the 4 named files.
+
 ## Reverted: real 3D letter tiles and 3D main menu
 Both the hand-written OpenGL ES letter tiles (`com.example.ui.render3d`, `LetterTile3DGrid`) and the 3D title/PLAY/STORE menu (`Menu3DScene`) were tried, built to compile cleanly, but looked bad in practice once actually seen on a device. Reverted to the original `LetterBox.kt` (FlowRow-of-2D-boxes with the `graphicsLayer` flip) and the original `MainMenuScreen` title/buttons.
 - Lesson: this whole custom-GLES detour was written and iterated on without ever being able to see it render - CI only proves it compiles, not that it looks right. Visual/UX work in this project needs an actual look before committing further effort to a given technique, not just a green build.
@@ -46,6 +53,9 @@ Both the hand-written OpenGL ES letter tiles (`com.example.ui.render3d`, `Letter
 - Removed an unused icon import left over from earlier development.
 
 ## Files touched
+- `app/src/main/res/drawable/img_shrek.xml`, `img_lord_of_the_rings.xml`, `img_pulp_fiction.xml`, `img_jaws.xml` — new
+- `app/src/main/java/com/example/ui/screens/ProceduralMoviePoster.kt` — new
+- `IMAGE_SETUP.txt` — updated
 - `app/src/main/java/com/example/ui/render3d/` — added, then removed entirely (reverted)
 - `app/src/main/java/com/example/ui/components/LetterBox.kt` — restored to its original form after a brief detour through render3d
 - `app/src/main/java/com/example/ui/screens/CinematicBackground.kt` — new, then extended with the snow layer
