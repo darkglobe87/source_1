@@ -1,5 +1,11 @@
 # Bad Plots — Update Changelog
 
+## Fix: procedural posters now actually represent the film, not just its genre
+Feedback: the generated posters were meant to represent the actual film, and generic hash-seeded shapes (or even genre-mood colors) don't do that - two sci-fi movies looking identical isn't "representing" either one specifically.
+- Added `drawSpecificIcon` to `ProceduralMoviePoster`: a hand-designed icon for each of the 32 movies without a specific drawable, built directly from that film's own `plotHint`/`sceneHint`/`characterHint` in `movies.json` - e.g. crossed lightsabers + a Death Star for Star Wars, a spinning top for Inception, a lightning bolt for Back to the Future, an amber gem with a mosquito for Jurassic Park, a ship bow + iceberg for Titanic. All 32 titles checked against the exact strings in `movies.json`.
+- Kept the genre/mood-based palette (dark red for horror, cool cyan/purple for sci-fi, etc.) as the background behind each specific icon, and as the fallback for any future/AI-generated movie that doesn't match one of the 32 hardcoded titles - so nothing regresses for content this doesn't cover yet.
+- The fully-generic random-shape fallback (below) now only fires for a title AND mood match failure simultaneously, which shouldn't happen for any of the current 36 movies.
+
 ## Fix: procedural movie posters clustering into one corner
 `ProceduralMoviePoster`'s "scattered circles" template indexed its 9-float random pool with `f[(i * 3) % f.size]` for the Y position - since `gcd(3, 9) = 3`, that expression only ever produces 3 distinct values (0, 3, 6) no matter how many circles are drawn, so every circle's Y collapsed onto the same 3 repeated values instead of spreading across the canvas. Confirmed via screenshots: circles bunched into the top-left corner on every affected movie, leaving most of the poster empty.
 - Replaced the whole `f[expr % f.size]`-style indexing scheme with `FloatCursor`, which hands out each pool value exactly once per draw (sequential, never re-indexed) - fixes the same bug class across all 5 templates, not just the one that happened to be visibly broken.

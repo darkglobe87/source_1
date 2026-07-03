@@ -386,8 +386,13 @@ fun GameScreen(
                                 contentScale = ContentScale.Fit
                             )
                         } else {
+                            val movie = uiState.currentMovie
+                            val contentText = listOfNotNull(
+                                movie?.badDescription, movie?.characterHint, movie?.plotHint, movie?.sceneHint
+                            ).joinToString(" ")
                             ProceduralMoviePoster(
                                 title = movieTitle,
+                                contentText = contentText,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(160.dp)
